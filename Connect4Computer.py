@@ -67,24 +67,24 @@ def train(): #Train the computer values using the most recent games.
             m = move
         else:
             m = 6 - move
-        columntypescore[m][column_indexr] = str(round(float(columntypescore[m][column_indexr]) + (2 - result)*size_factor,3)) #add a value between 0 and 2 to the total score.
-        columntypescore[m][column_indexy] = str(round(float(columntypescore[m][column_indexy]) + result*size_factor,3))
-        columntypegames[m][column_indexr] = str(round(float(columntypegames[m][column_indexr]) + 2*size_factor,3)) #add the maximum possible score that could have been achieved to the games.
-        columntypegames[m][column_indexy] = str(round(float(columntypegames[m][column_indexy]) + 2*size_factor,3))
+        columntypescore[m][column_indexr] = str(round(float(columntypescore[m][column_indexr]) + (2 - result)*size_factor,1)) #add a value between 0 and 2 to the total score.
+        columntypescore[m][column_indexy] = str(round(float(columntypescore[m][column_indexy]) + result*size_factor,1))
+        columntypegames[m][column_indexr] = str(round(float(columntypegames[m][column_indexr]) + 2*size_factor,1)) #add the maximum possible score that could have been achieved to the games.
+        columntypegames[m][column_indexy] = str(round(float(columntypegames[m][column_indexy]) + 2*size_factor,1))
         row_indexr = takerow([position[k][height[move]] for k in range(7)]) 
         row_indexy = takerow([fposition[k][height[move]] for k in range(7)])
-        rowtypescore[height[move]][row_indexr] = str(round(float(rowtypescore[height[move]][row_indexr]) + (2 - result)*size_factor,3))
-        rowtypescore[height[move]][row_indexy] = str(round(float(rowtypescore[height[move]][row_indexy]) + result*size_factor,3))
-        rowtypegames[height[move]][row_indexr] = str(round(float(rowtypegames[height[move]][row_indexr]) + 2*size_factor,3))
-        rowtypegames[height[move]][row_indexy] = str(round(float(rowtypegames[height[move]][row_indexy]) + 2*size_factor,3))
+        rowtypescore[height[move]][row_indexr] = str(round(float(rowtypescore[height[move]][row_indexr]) + (2 - result)*size_factor,1))
+        rowtypescore[height[move]][row_indexy] = str(round(float(rowtypescore[height[move]][row_indexy]) + result*size_factor,1))
+        rowtypegames[height[move]][row_indexr] = str(round(float(rowtypegames[height[move]][row_indexr]) + 2*size_factor,1))
+        rowtypegames[height[move]][row_indexy] = str(round(float(rowtypegames[height[move]][row_indexy]) + 2*size_factor,1))
         diagonals_index = [diagonals.index(diagonal) for diagonal in diagonals if (move,height[move]) in diagonal] 
         for k in diagonals_index:
             diagonal1_indexr = takediagonal([position[l[0]][l[1]] for l in diagonals[k]])
             diagonal1_indexy = takediagonal([fposition[l[0]][l[1]] for l in diagonals[k]])
-            diagonaltypescore[k//2][diagonal1_indexr] = str(round(float(diagonaltypescore[k//2][diagonal1_indexr]) + (2 - result)*size_factor,3))
-            diagonaltypescore[k//2][diagonal1_indexy] = str(round(float(diagonaltypescore[k//2][diagonal1_indexy]) + result*size_factor,3))
-            diagonaltypegames[k//2][diagonal1_indexr] = str(round(float(diagonaltypegames[k//2][diagonal1_indexr]) + 2*size_factor,3))
-            diagonaltypegames[k//2][diagonal1_indexy] = str(round(float(diagonaltypegames[k//2][diagonal1_indexy]) + 2*size_factor,3))
+            diagonaltypescore[k//2][diagonal1_indexr] = str(round(float(diagonaltypescore[k//2][diagonal1_indexr]) + (2 - result)*size_factor,1))
+            diagonaltypescore[k//2][diagonal1_indexy] = str(round(float(diagonaltypescore[k//2][diagonal1_indexy]) + result*size_factor,1))
+            diagonaltypegames[k//2][diagonal1_indexr] = str(round(float(diagonaltypegames[k//2][diagonal1_indexr]) + 2*size_factor,1))
+            diagonaltypegames[k//2][diagonal1_indexy] = str(round(float(diagonaltypegames[k//2][diagonal1_indexy]) + 2*size_factor,1))
         height[move] += 1
     with open('connecttrainingvalues','w') as f:
         f.write("_".join(["-".join(i) for i in columntypegames]) + "¬" + "_".join(["-".join(i) for i in rowtypegames]) + "¬" + "_".join(["-".join(i) for i in diagonaltypegames])
