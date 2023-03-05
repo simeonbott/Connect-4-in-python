@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[13]:
+# In[1]:
 
 
 import numpy as np
@@ -16,25 +16,6 @@ circleheight = 80 #change this value to increase the verticle size.
 ratio = 25
 buttonwidth = circlewidth*2//ratio
 buttonheight = circleheight//ratio
-
-with open('connecttrainingvalues','r') as f:
-    text = f.read()
-texts = text.split("¬")
-co1 = texts[0].split("_")
-columntypegames = [i.split("-") for i in co1]
-ro1 = texts[1].split("_")
-rowtypegames = [i.split("-") for i in ro1]
-di1 = texts[2].split("_")
-diagonaltypegames = [i.split("-") for i in di1]
-co2 = texts[3].split("_")
-columntypescore = [i.split("-") for i in co2]
-ro2 = texts[4].split("_")
-rowtypescore = [i.split("-") for i in ro2]
-di2 = texts[5].split("_")
-diagonaltypescore = [i.split("-") for i in di2]
-columntype = [[int(10**(float(columntypescore[i][j])/float(columntypegames[i][j])*10))for j in range(16)] for i in range(4)]
-rowtype = [[int(10**(float(rowtypescore[i][j])/float(rowtypegames[i][j])*10)) for j in range(289)] for i in range(6)]
-diagonaltype = [[int(10**(float(diagonaltypescore[i][j])/float(diagonaltypegames[i][j])*10)) for j in range(len(diagonaltypescore[i]))] for i in range(6)]
     
 class GameState:
     def __init__(self):
@@ -46,8 +27,34 @@ class GameState:
         self.gamespeed = "slow"
         self.animationspeed = 0.125
         self.computerplayers = []
+        self.gameon = 1
 
-def train(): #Train the computer values using the most recent games.
+class ComputerPlayer:
+    def __init__(self,filename,computertype):
+        with open(filename,'r') as f:
+            text = f.read()
+        texts = text.split("¬")
+        co1 = texts[0].split("_")
+        self.columntypegames = [i.split("-") for i in co1]
+        ro1 = texts[1].split("_")
+        self.rowtypegames = [i.split("-") for i in ro1]
+        di1 = texts[2].split("_")
+        self.diagonaltypegames = [i.split("-") for i in di1]
+        co2 = texts[3].split("_")
+        self.columntypescore = [i.split("-") for i in co2]
+        ro2 = texts[4].split("_")
+        self.rowtypescore = [i.split("-") for i in ro2]
+        di2 = texts[5].split("_")
+        self.diagonaltypescore = [i.split("-") for i in di2]
+        self.columntype = [[int(10**(float(self.columntypescore[i][j])/float(self.columntypegames[i][j])*10))for j in range(16)] for i in range(4)]
+        self.rowtype = [[int(10**(float(self.rowtypescore[i][j])/float(self.rowtypegames[i][j])*10)) for j in range(289)] for i in range(6)]
+        self.diagonaltype = [[int(10**(float(self.diagonaltypescore[i][j])/float(self.diagonaltypegames[i][j])*10)) for j in range(len(self.diagonaltypescore[i]))] for i in range(6)]
+        self.computertype = computertype
+        
+comp1 = ComputerPlayer('connecttrainingvalues','unsupervised')
+
+        
+def train(computer): #Train the computer values using the most recent games.
     position = [[0 for j in range(6)] for i in range(7)] #position over the course of the game.
     fposition = [[0 for j in range(6)] for i in range(7)] #inverted position.
     height = [0 for i in range(7)]
@@ -67,31 +74,31 @@ def train(): #Train the computer values using the most recent games.
             m = move
         else:
             m = 6 - move
-        columntypescore[m][column_indexr] = str(round(float(columntypescore[m][column_indexr]) + (2 - result)*size_factor,1)) #add a value between 0 and 2 to the total score.
-        columntypescore[m][column_indexy] = str(round(float(columntypescore[m][column_indexy]) + result*size_factor,1))
-        columntypegames[m][column_indexr] = str(round(float(columntypegames[m][column_indexr]) + 2*size_factor,1)) #add the maximum possible score that could have been achieved to the games.
-        columntypegames[m][column_indexy] = str(round(float(columntypegames[m][column_indexy]) + 2*size_factor,1))
+        computer.columntypescore[m][column_indexr] = str(round(float(computer.columntypescore[m][column_indexr]) + (2 - result)*size_factor,3)) #add a value between 0 and 2 to the total score.
+        computer.columntypescore[m][column_indexy] = str(round(float(computer.columntypescore[m][column_indexy]) + result*size_factor,3))
+        computer.columntypegames[m][column_indexr] = str(round(float(computer.columntypegames[m][column_indexr]) + 2*size_factor,3)) #add the maximum possible score that could have been achieved to the games.
+        computer.columntypegames[m][column_indexy] = str(round(float(computer.columntypegames[m][column_indexy]) + 2*size_factor,3))
         row_indexr = takerow([position[k][height[move]] for k in range(7)]) 
         row_indexy = takerow([fposition[k][height[move]] for k in range(7)])
-        rowtypescore[height[move]][row_indexr] = str(round(float(rowtypescore[height[move]][row_indexr]) + (2 - result)*size_factor,1))
-        rowtypescore[height[move]][row_indexy] = str(round(float(rowtypescore[height[move]][row_indexy]) + result*size_factor,1))
-        rowtypegames[height[move]][row_indexr] = str(round(float(rowtypegames[height[move]][row_indexr]) + 2*size_factor,1))
-        rowtypegames[height[move]][row_indexy] = str(round(float(rowtypegames[height[move]][row_indexy]) + 2*size_factor,1))
+        computer.rowtypescore[height[move]][row_indexr] = str(round(float(computer.rowtypescore[height[move]][row_indexr]) + (2 - result)*size_factor,3))
+        computer.rowtypescore[height[move]][row_indexy] = str(round(float(computer.rowtypescore[height[move]][row_indexy]) + result*size_factor,3))
+        computer.rowtypegames[height[move]][row_indexr] = str(round(float(computer.rowtypegames[height[move]][row_indexr]) + 2*size_factor,3))
+        computer.rowtypegames[height[move]][row_indexy] = str(round(float(computer.rowtypegames[height[move]][row_indexy]) + 2*size_factor,3))
         diagonals_index = [diagonals.index(diagonal) for diagonal in diagonals if (move,height[move]) in diagonal] 
         for k in diagonals_index:
             diagonal1_indexr = takediagonal([position[l[0]][l[1]] for l in diagonals[k]])
             diagonal1_indexy = takediagonal([fposition[l[0]][l[1]] for l in diagonals[k]])
-            diagonaltypescore[k//2][diagonal1_indexr] = str(round(float(diagonaltypescore[k//2][diagonal1_indexr]) + (2 - result)*size_factor,1))
-            diagonaltypescore[k//2][diagonal1_indexy] = str(round(float(diagonaltypescore[k//2][diagonal1_indexy]) + result*size_factor,1))
-            diagonaltypegames[k//2][diagonal1_indexr] = str(round(float(diagonaltypegames[k//2][diagonal1_indexr]) + 2*size_factor,1))
-            diagonaltypegames[k//2][diagonal1_indexy] = str(round(float(diagonaltypegames[k//2][diagonal1_indexy]) + 2*size_factor,1))
+            computer.diagonaltypescore[k//2][diagonal1_indexr] = str(round(float(computer.diagonaltypescore[k//2][diagonal1_indexr]) + (2 - result)*size_factor,3))
+            computer.diagonaltypescore[k//2][diagonal1_indexy] = str(round(float(computer.diagonaltypescore[k//2][diagonal1_indexy]) + result*size_factor,3))
+            computer.diagonaltypegames[k//2][diagonal1_indexr] = str(round(float(computer.diagonaltypegames[k//2][diagonal1_indexr]) + 2*size_factor,3))
+            computer.diagonaltypegames[k//2][diagonal1_indexy] = str(round(float(computer.diagonaltypegames[k//2][diagonal1_indexy]) + 2*size_factor,3))
         height[move] += 1
     with open('connecttrainingvalues','w') as f:
-        f.write("_".join(["-".join(i) for i in columntypegames]) + "¬" + "_".join(["-".join(i) for i in rowtypegames]) + "¬" + "_".join(["-".join(i) for i in diagonaltypegames])
-            + "¬" + "_".join(["-".join(i) for i in columntypescore]) + "¬" + "_".join(["-".join(i) for i in rowtypescore]) + "¬" + "_".join(["-".join(i) for i in diagonaltypescore]))
-    columntype = [[int(10**(float(columntypescore[i][j])/float(columntypegames[i][j])*10))for j in range(16)] for i in range(4)]
-    rowtype = [[int(10**(float(rowtypescore[i][j])/float(rowtypegames[i][j])*10)) for j in range(289)] for i in range(6)]
-    diagonaltype = [[int(10**(float(diagonaltypescore[i][j])/float(diagonaltypegames[i][j])*10)) for j in range(len(diagonaltypescore[i]))] for i in range(6)]
+        f.write("_".join(["-".join(i) for i in computer.columntypegames]) + "¬" + "_".join(["-".join(i) for i in computer.rowtypegames]) + "¬" + "_".join(["-".join(i) for i in computer.diagonaltypegames])
+            + "¬" + "_".join(["-".join(i) for i in computer.columntypescore]) + "¬" + "_".join(["-".join(i) for i in computer.rowtypescore]) + "¬" + "_".join(["-".join(i) for i in computer.diagonaltypescore]))
+    computer.columntype = [[int(10**(float(computer.columntypescore[i][j])/float(computer.columntypegames[i][j])*10))for j in range(16)] for i in range(4)]
+    computer.rowtype = [[int(10**(float(computer.rowtypescore[i][j])/float(computer.rowtypegames[i][j])*10)) for j in range(289)] for i in range(6)]
+    computer.diagonaltype = [[int(10**(float(computer.diagonaltypescore[i][j])/float(computer.diagonaltypegames[i][j])*10)) for j in range(len(computer.diagonaltypescore[i]))] for i in range(6)]
 
 def takediagonal(vector): #finds the identifier for a diagonal of the position.
     if len(vector) == 4:
@@ -179,11 +186,9 @@ def evaluation(position,player,column_changes,row_changes,diagonal_changes,previ
     if diagonal_changes:
         for i in diagonal_changes:
             index[13+i] = takediagonal([new_position[k[0]][k[1]] for k in diagonals[i]])   
-    return [int(i) for i in index]
+    return index
     
-def getvalue(new_position,turnn,new_moves,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index): #calculates the final score of a position. (operates with respect to a previously calculated position)
-    #global counter
-    #counter += 1
+def getvalue(new_position,turnn,new_moves,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index,computer): #calculates the final score of a position. (operates with respect to a previously calculated position)
     diagonal_changes = {diagonals.index(diagonal) for i in new_moves for diagonal in diagonals if i in diagonal}
     column_changes = {i[0] for i in new_moves}
     row_changes = {i[1] for i in new_moves}
@@ -193,25 +198,23 @@ def getvalue(new_position,turnn,new_moves,previous_red_score,previous_yellow_sco
     yellow_score = previous_yellow_score
     for i in column_changes:
         if i < 4:
-            red_score = red_score + columntype[i][red_index[i]] - columntype[i][previous_red_index[i]]
-            yellow_score = yellow_score + columntype[i][yellow_index[i]] - columntype[i][previous_yellow_index[i]]
+            red_score = red_score + computer.columntype[i][red_index[i]] - computer.columntype[i][previous_red_index[i]]
+            yellow_score = yellow_score + computer.columntype[i][yellow_index[i]] - computer.columntype[i][previous_yellow_index[i]]
         else:
-            red_score += columntype[6-i][red_index[i]] - columntype[6-i][previous_red_index[i]]
-            yellow_score += columntype[6-i][yellow_index[i]] - columntype[6-i][previous_yellow_index[i]]
+            red_score += computer.columntype[6-i][red_index[i]] - computer.columntype[6-i][previous_red_index[i]]
+            yellow_score += computer.columntype[6-i][yellow_index[i]] - computer.columntype[6-i][previous_yellow_index[i]]
     for i in row_changes:
-        red_score += rowtype[i][red_index[i+7]] - rowtype[i][previous_red_index[i+7]]
-        yellow_score += rowtype[i][yellow_index[i+7]] - rowtype[i][previous_yellow_index[i+7]]
+        red_score += computer.rowtype[i][red_index[i+7]] - computer.rowtype[i][previous_red_index[i+7]]
+        yellow_score += computer.rowtype[i][yellow_index[i+7]] - computer.rowtype[i][previous_yellow_index[i+7]]
     for i in diagonal_changes:
-        red_score += diagonaltype[i//2][red_index[i+13]] - diagonaltype[i//2][previous_red_index[i+13]]
-        yellow_score += diagonaltype[i//2][yellow_index[i+13]] - diagonaltype[i//2][previous_yellow_index[i+13]]
+        red_score += computer.diagonaltype[i//2][red_index[i+13]] - computer.diagonaltype[i//2][previous_red_index[i+13]]
+        yellow_score += computer.diagonaltype[i//2][yellow_index[i+13]] - computer.diagonaltype[i//2][previous_yellow_index[i+13]]
     score = round((red_score - yellow_score)/(red_score + yellow_score + 0.0001),3)
     if turnn == 0:
         score = -score
     return score, red_score,yellow_score,red_index,yellow_index
 
-def treep():
-    #global counter
-    #counter = 0
+def treep(computer):
     if connect.gamespeed != "super":
         treebutton.configure(bg ='dark grey')
     window.update_idletasks()
@@ -222,9 +225,9 @@ def treep():
     previous_red_index = [0 for i in range(25)] #Indexes corresponding to the blank board.
     previous_yellow_index = [0 for i in range(25)]
     moves = [(i,j) for i in range(7) for j in range(6)] #Tell getvalue() to investigate the entire board for differences between the blank board and current position.
-    t,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index = getvalue(connect.board,connect.turn,moves,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index)
+    t,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index = getvalue(connect.board,connect.turn,moves,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index,computer)
     height = [len([1 for j in range(6) if connect.board[i][j] != 0]) for i in range(7)]
-    value, values = tree(height,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index)
+    value, values = tree(height,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index,computer)
     ki = random.randint(0,11110) #play a non-optimal move sometimes.
     if ki < 10000:
         move = random.choice([i for i in range(7) if values[i] == max(values)])
@@ -242,7 +245,7 @@ def treep():
     for i,button in enumerate(button_list):
         button.configure(command = lambda e=i:place(e))
     
-def tree(height,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index):
+def tree(height,previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index,computer):
     turnn = connect.turn
     new_position = [[connect.board[i][j] for j in range(6)] for i in range(7)]
     values = [[[[2 for _ in range(7)] for o in range(7)] for u in range(7)]for t in range(7)]
@@ -252,31 +255,28 @@ def tree(height,previous_red_score,previous_yellow_score,previous_red_index,prev
     for i in range(7):
         if height[i] < 6:
             new_position[i][height[i]] = turnn + 1
-            value,first_red_score,first_yellow_score,first_red_index,first_yellow_index = getvalue(new_position,turnn,[(i,height[i])],previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index)
+            value,first_red_score,first_yellow_score,first_red_index,first_yellow_index = getvalue(new_position,turnn,[(i,height[i])],previous_red_score,previous_yellow_score,previous_red_index,previous_yellow_index,computer)
             height[i] += 1
             if value < -0.95: #override the search tree if the first move is winning.
                 values1[i] = 0.98
-                #print(f'{i = } {values1[i] = } {first_yellow_score = } {first_red_score = } overwhelming advantage')
             else:
                 turnn = 1 - turnn
                 for j in range(7):
                     if height[j] < 6:
                         new_position[j][height[j]] = turnn + 1
-                        value,second_red_score,second_yellow_score,second_red_index,second_yellow_index = getvalue(new_position,turnn,[(j,height[j])],first_red_score,first_yellow_score,first_red_index,first_yellow_index)
+                        value,second_red_score,second_yellow_score,second_red_index,second_yellow_index = getvalue(new_position,turnn,[(j,height[j])],first_red_score,first_yellow_score,first_red_index,first_yellow_index,computer)
                         height[j] += 1
                         if value < -0.95: #override the search tree if the second move is winning.
                             values2[i][j] = -0.98
-                            #print(f"{i = } {j = } {values2[i][j] = } {second_yellow_score = } {second_red_score = } overwhelming advantage")
                         else:
                             turnn = 1 - turnn
                             for k in range(7):
                                 if height[k] < 6:
                                     new_position[k][height[k]] = turnn + 1
-                                    value,third_red_score,third_yellow_score,third_red_index,third_yellow_index = getvalue(new_position,turnn,[(k,height[k])],second_red_score,second_yellow_score,second_red_index,second_yellow_index)
+                                    value,third_red_score,third_yellow_score,third_red_index,third_yellow_index = getvalue(new_position,turnn,[(k,height[k])],second_red_score,second_yellow_score,second_red_index,second_yellow_index,computer)
                                     height[k] += 1
                                     if value < -0.95: #override the search tree if the third move is winning.
                                         values3[i][j][k] = 0.99
-                                        #print(f"{i = } {j = } {k = } {values3[i][j][k] = } overwhelming advantage")
                                     else:
                                         turnn = 1 - turnn
                                         for l in range(7):
@@ -284,19 +284,14 @@ def tree(height,previous_red_score,previous_yellow_score,previous_red_index,prev
                                                 new_position[l][height[l]] = turnn + 1
                                                 if i > k and not j in [i,k]:
                                                     values[i][j][k][l] = values[k][j][i][l]
-                                                    #print(f'{i = } {j = } {k = } {l = } {values[i][j][k][l] = } copying {values[k][j][i][l] = } by switching i and k')
                                                 elif j > l and not k in [l,j]:
                                                     values[i][j][k][l] = values[i][l][k][j]
-                                                    #print(f'{i = } {j = } {k = } {l = } {values[i][j][k][l] = } copying {values[i][l][k][j] = } by switching j and l')
                                                 else:
-                                                    values[i][j][k][l],q,w,e,r  = getvalue(new_position,turnn,[(l,height[l])],third_red_score,third_yellow_score,third_red_index,third_yellow_index)
-                                                #print(f'{i = } {j = } {k = } {l = } {values[i][j][k][l] = } by computation')
+                                                    values[i][j][k][l],q,w,e,r  = getvalue(new_position,turnn,[(l,height[l])],third_red_score,third_yellow_score,third_red_index,third_yellow_index,computer)
                                                 new_position[l][height[l]] = 0
                                         values3[i][j][k] = min(values[i][j][k])
                                         if values3[i][j][k] == -2:
                                             values3[i][j][k] = 0
-                                            #print(f'{i = } {j = } {k = } {values3[i][j][k] = } endgame - ran out of legal moves')
-                                        #print(f'{i = } {j = } {k = } {values3[i][j][k] = }')
                                         turnn = 1 - turnn
                                     height[k] -= 1
                                     new_position[k][height[k]] = 0
@@ -304,16 +299,12 @@ def tree(height,previous_red_score,previous_yellow_score,previous_red_index,prev
                             values2[i][j] = max(values3[i][j])
                             if values2[i][j] == 2:
                                 values2[i][j] = 0
-                                #print(f'{i = } {j = } {values2[i][j] = } endgame - ran out of legal moves')
-                        #print(f'{i = } {j = } {values2[i][j] = }')
                         height[j] -= 1
                         new_position[j][height[j]] = 0
                 turnn = 1 - turnn
                 values1[i] = min(values2[i])
                 if values1[i] == -2:
                     values1[i] = 0
-                    #print(f'{i = } {values1[i] = } endgame - ran out of legal moves')
-            #print(f'{i = } {values1[i] = }')
             height[i] -= 1
             new_position[i][height[i]] = 0
     return 0, values1
@@ -346,11 +337,8 @@ def place(move): #runs every time a move is played.
             return
         switchturn()
         window.update_idletasks()
-        checkcomputermove() #check if the computer is the next player to move.
-
-def checkcomputermove():
-    if connect.turn in connect.computerplayers:
-        treep()
+        if connect.turn in connect.computerplayers: #check if the computer is the next player to move.
+            treep(comp1)
 
 def switchturn(): #general updates after a move has been made.
     connect.turn = -(connect.turn-1)
@@ -393,38 +381,40 @@ def gameover(turn): #Performs actions for after a win or a draw.
             button_list[i].configure(activebackground = ['red','yellow','#F0F0F0'][turn])
     gamechosen()
     resetbutton.grid(row=8,column=3)
-    replaybutton.grid(row=8,column=1)
+    beginbutton.grid(row=8,column=1)
     backwardmovebutton.grid(row=8,column=2)
     forwardmovebutton.grid(row=8,column=4)
     endbutton.grid(row=8,column=5)
+    compfirstbutton.configure(state='active',bg = '#F0F0F0')
+    compsecondbutton.configure(state='active',bg = '#F0F0F0')
+    treebutton.configure(state='active',command='none',bg = '#F0F0F0')
+    twoplayerbutton.configure(state='active',bg = '#F0F0F0')
+    self_playbutton.configure(state='active',bg = '#F0F0F0')
+    readgamebutton.configure(state='active',bg = '#F0F0F0')
     connect.computerplayers = []
-    train()
+    connect.gameon = 0
+    train(comp1)
 
 def resetboard(): #Resets the board to its beginning state.
     resetbutton.grid_forget()
-    replaybutton.grid_forget()
+    beginbutton.grid_forget()
     backwardmovebutton.grid_forget()
     forwardmovebutton.grid_forget()
     endbutton.grid_forget()
-    yellowbutton.configure(command=yellow,bg='#F0F0F0')
-    redbutton.configure(command=red,bg='#F0F0F0')
-    treebutton.configure(command=treep,bg='#F0F0F0')
-    twoplayerbutton.configure(command=twoplayer,bg='#F0F0F0')
-    superplaybutton.configure(command=superplay,bg='#F0F0F0')
-    readgamebutton.configure(command=readgame,bg='#F0F0F0')
     for i in range(6):
         for j in range(7):
             label_list[j*6 + i].configure(image = imgs[2])
     for i in range(7):
         button_list[i].configure(bg = '#F0F0F0', activebackground = '#F0F0F0', command = lambda e=i: place(e), text = '')
     connect.board = [[0 for i in range(6)] for j in range(7)]
-    treebutton.configure(command = treep)
+    treebutton.configure(state='active',command=lambda e=comp1:treep(e),bg = '#F0F0F0')
     turnnumber.configure(text = "Turn 1")
     playerturn.configure(bg = 'yellow')
     connect.turn = 1
     connect.current_move = 1
     connect.move_list = ""
     connect.height = [0 for i in range(7)]
+    connect.gameon = 1
 
 def switchgamespeed():
     if connect.gamespeed == "super":
@@ -456,9 +446,9 @@ def readgame():
         connect.gamespeed = "fast"
         gameover(-1)
         connect.gamespeed = y
-        replay()
+        tobegin()
 
-def replay(): #resets the game position after a game for inspection and analysis.
+def tobegin(): #resets the game position after a game for inspection and analysis.
     connect.height = [0 for i in range(7)]
     connect.current_move = 0
     connect.board = [[0 for i in range(6)] for j in range(7)]
@@ -498,51 +488,60 @@ def toend(): #resets the game position to the end of the game.
         connect.height[move] += 1
     connect.current_move = len(connect.move_list)
         
-def superplay():
-    num_of_games = superplayentry.get()
+def self_play():
+    num_of_games = self_playentry.get()
     if num_of_games == "":
         num_of_games = "1"
-        superplayentry.insert(0,"1")
+        self_playentry.insert(0,"1")
+    if connect.gameon == 0:
+        resetboard()
     if str.isdigit(num_of_games):
-        superplaybutton.configure(bg='dark grey')
+        self_playbutton.configure(bg='dark grey')
         window.update_idletasks()
         gamechosen()
+        treebutton.configure(state='active',command='none')
         st1 = time.time()
         move_list = connect.move_list
         for _ in range(int(num_of_games)):
             resetboard()
-            for i in move_list:
+            for i in move_list: #if self_play is run, it starts every game from the board position before it was pressed.
                 place(int(i))
             connect.computerplayers = [0,1]
-            treep()
+            treep(comp1) #since connect.computerplayers is [0,1], treep() will loop itself until the game ends, due to the callback at the end of place().
         en1 = time.time()
         print(f"time taken: {en1 - st1}")
 
-def yellow():
-    yellowbutton.configure(bg = 'dark grey')
+def compfirst():
+    compfirstbutton.configure(bg = 'dark grey')
     connect.computerplayers = [1]
+    if connect.gameon == 0:
+        resetboard()
     gamechosen()
     if connect.turn == 1:
-        treep()
+        treep(comp1)
     
-def red():
-    redbutton.configure(bg = 'dark grey')
+def compsecond():
+    compsecondbutton.configure(bg = 'dark grey')
     connect.computerplayers = [0]
+    if connect.gameon == 0:
+        resetboard()
     gamechosen()
     if connect.turn == 0:
-        treep()
+        treep(comp1)
     
 def twoplayer():
     twoplayerbutton.configure(bg = 'dark grey')
+    if connect.gameon == 0:
+        resetboard()
     gamechosen()
     
 def gamechosen():
-    yellowbutton.configure(command='none')
-    redbutton.configure(command='none')
-    treebutton.configure(command='none')
-    twoplayerbutton.configure(command='none')
-    superplaybutton.configure(command='none')
-    readgamebutton.configure(command='none')
+    compfirstbutton.configure(state='disabled')
+    compsecondbutton.configure(state='disabled')
+    treebutton.configure(state='disabled')
+    twoplayerbutton.configure(state='disabled')
+    self_playbutton.configure(state='disabled')
+    readgamebutton.configure(state='disabled')
 
 #setting up global variables.
 connect = GameState()
@@ -568,24 +567,24 @@ playerturn = tk.Label(window, bg = 'yellow',height=buttonheight,width=buttonwidt
 playerturn.grid(row=8,column=0)
 turnnumber = tk.Label(window,text = "Turn 1",height=buttonheight)
 turnnumber.grid(row=8,column=6)
-treebutton = tk.Button(window,text="Play\nComputer\nMove",height=buttonheight,command=treep,bg='#F0F0F0')
+treebutton = tk.Button(window,text="Play\nComputer\nMove",height=buttonheight,command=lambda e=comp1:treep(e),bg='#F0F0F0')
 treebutton.grid(row=9,column=2)
-yellowbutton = tk.Button(window,text="Computer\nPlays\nFirst",height=buttonheight,command=yellow,bg='#F0F0F0')
-yellowbutton.grid(row=9,column=3)
-redbutton = tk.Button(window,text="Computer\nPlays\nSecond",height=buttonheight,command=red,bg='#F0F0F0')
-redbutton.grid(row=9,column=4)
+compfirstbutton = tk.Button(window,text="Computer\nPlays\nFirst",height=buttonheight,command=compfirst,bg='#F0F0F0')
+compfirstbutton.grid(row=9,column=3)
+compsecondbutton = tk.Button(window,text="Computer\nPlays\nSecond",height=buttonheight,command=compsecond,bg='#F0F0F0')
+compsecondbutton.grid(row=9,column=4)
 twoplayerbutton = tk.Button(window,text="2 Player\nGame",height=buttonheight,command=twoplayer,bg='#F0F0F0')
 twoplayerbutton.grid(row=9,column=1)
-superplaybutton = tk.Button(window,text="Computer\nSelf-play",height=buttonheight,command=superplay,bg='#F0F0F0')
-superplaybutton.grid(row=9,column=5)
-superplayframe = tk.Frame(window)
-superplayframe.grid(row=10,column=5)
-superplaylabel = tk.Label(superplayframe,text="No. of games")
-superplaylabel.grid(row=0,column=0)
-superplayentry = tk.Entry(superplayframe,width=buttonwidth)
-superplayentry.grid(row=1,column=0)
+self_playbutton = tk.Button(window,text="Computer\nSelf-play",height=buttonheight,command=self_play,bg='#F0F0F0')
+self_playbutton.grid(row=9,column=5)
+self_playframe = tk.Frame(window)
+self_playframe.grid(row=10,column=5)
+self_playlabel = tk.Label(self_playframe,text="No. of games")
+self_playlabel.grid(row=0,column=0)
+self_playentry = tk.Entry(self_playframe,width=buttonwidth)
+self_playentry.grid(row=1,column=0)
 resetbutton = tk.Button(window,text = "Reset",command=resetboard,bg='#F0F0F0')
-replaybutton = tk.Button(window,text = "<<",command=replay,bg='#F0F0F0')
+beginbutton = tk.Button(window,text = "<<",command=tobegin,bg='#F0F0F0')
 forwardmovebutton = tk.Button(window,text = "=>",command=forwardmove,bg='#F0F0F0')
 backwardmovebutton = tk.Button(window,text = "<=",command=backwardmove,bg='#F0F0F0')
 endbutton = tk.Button(window,text = ">>",command=toend,bg='#F0F0F0')
@@ -618,5 +617,11 @@ diagonals = [[(3,0),(4,1),(5,2),(6,3)],[(3,0),(2,1),(1,2),(0,3)],[(3,5),(4,4),(5
             [(4,0),(3,1),(2,2),(1,3),(0,4)],[(2,5),(3,4),(4,3),(5,2),(6,1)],[(4,5),(3,4),(2,3),(1,2),(0,1)],[(1,0),(2,1),(3,2),(4,3),(5,4),(6,5)],
              [(5,0),(4,1),(3,2),(2,3),(1,4),(0,5)],[(0,0),(1,1),(2,2),(3,3),(4,4),(5,5)],[(6,0),(5,1),(4,2),(3,3),(2,4),(1,5)]] #list of every diagonal of length > 3.
 window.title('Connect 4')
-window.mainloop() #run the tkinter window.
+window.mainloop()
+
+
+# In[ ]:
+
+
+
 
